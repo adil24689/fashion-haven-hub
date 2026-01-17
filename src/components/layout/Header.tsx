@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
@@ -8,10 +8,12 @@ import {
   Heart, 
   Menu, 
   X,
-  ChevronDown 
+  ChevronDown,
+  LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 
 const categories = [
   { 
@@ -45,6 +47,8 @@ export const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -153,9 +157,17 @@ export const Header = () => {
             </Link>
 
             {/* User */}
-            <Link to="/account" className="p-2 hover:bg-secondary rounded-full transition-colors">
-              <User size={20} />
-            </Link>
+            {!loading && (
+              user ? (
+                <Link to="/profile" className="p-2 hover:bg-secondary rounded-full transition-colors" title="My Account">
+                  <User size={20} />
+                </Link>
+              ) : (
+                <Link to="/auth" className="p-2 hover:bg-secondary rounded-full transition-colors" title="Sign In">
+                  <LogIn size={20} />
+                </Link>
+              )
+            )}
 
             {/* Cart */}
             <Link to="/cart" className="relative p-2 hover:bg-secondary rounded-full transition-colors">
