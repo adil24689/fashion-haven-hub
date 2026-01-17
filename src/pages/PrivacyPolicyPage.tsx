@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Shield, Eye, Lock, Database, UserCheck, Bell } from "lucide-react";
@@ -18,7 +19,7 @@ const PrivacyPolicyPage = () => {
       
       <main className="py-12">
         {/* Hero */}
-        <section className="bg-charcoal text-white py-16 mb-12">
+        <section className="bg-primary text-primary-foreground py-16 mb-12">
           <div className="container mx-auto px-4 text-center">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -31,7 +32,7 @@ const PrivacyPolicyPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-cream/80"
+              className="text-primary-foreground/80"
             >
               Last Updated: {lastUpdated}
             </motion.p>
@@ -47,10 +48,10 @@ const PrivacyPolicyPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-cream/30 rounded-lg p-6 text-center"
+                className="bg-muted rounded-lg p-6 text-center"
               >
-                <div className="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="w-6 h-6 text-gold" />
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="w-6 h-6 text-accent" />
                 </div>
                 <h3 className="font-display font-semibold text-foreground mb-2">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">{item.desc}</p>
@@ -67,12 +68,12 @@ const PrivacyPolicyPage = () => {
           >
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Database className="w-6 h-6 text-gold" />
+                <Database className="w-6 h-6 text-accent" />
                 Information We Collect
               </h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>We collect information you provide directly to us, including:</p>
-                <div className="bg-cream/30 rounded-lg p-6">
+                <div className="bg-muted rounded-lg p-6">
                   <h4 className="font-semibold text-foreground mb-3">Personal Information</h4>
                   <ul className="space-y-2">
                     <li>• Name, email address, and phone number</li>
@@ -82,7 +83,7 @@ const PrivacyPolicyPage = () => {
                     <li>• Order history and preferences</li>
                   </ul>
                 </div>
-                <div className="bg-cream/30 rounded-lg p-6">
+                <div className="bg-muted rounded-lg p-6">
                   <h4 className="font-semibold text-foreground mb-3">Automatically Collected Information</h4>
                   <ul className="space-y-2">
                     <li>• Device information (browser type, operating system)</li>
@@ -96,28 +97,28 @@ const PrivacyPolicyPage = () => {
 
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Eye className="w-6 h-6 text-gold" />
+                <Eye className="w-6 h-6 text-accent" />
                 How We Use Your Information
               </h2>
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start gap-3">
-                  <span className="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0" />
+                  <span className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0" />
                   <span><strong className="text-foreground">Order Processing:</strong> To process and fulfill your orders, send order confirmations, and provide customer support</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0" />
+                  <span className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0" />
                   <span><strong className="text-foreground">Personalization:</strong> To personalize your shopping experience and show relevant products</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0" />
+                  <span className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0" />
                   <span><strong className="text-foreground">Communication:</strong> To send promotional offers, newsletters (with your consent), and important updates</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0" />
+                  <span className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0" />
                   <span><strong className="text-foreground">Analytics:</strong> To analyze usage patterns and improve our website and services</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0" />
+                  <span className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0" />
                   <span><strong className="text-foreground">Security:</strong> To detect and prevent fraud, abuse, and security incidents</span>
                 </li>
               </ul>
@@ -125,10 +126,10 @@ const PrivacyPolicyPage = () => {
 
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Lock className="w-6 h-6 text-gold" />
+                <Lock className="w-6 h-6 text-accent" />
                 Data Security
               </h2>
-              <div className="bg-charcoal/5 rounded-lg p-6 text-muted-foreground">
+              <div className="bg-secondary rounded-lg p-6 text-muted-foreground">
                 <p className="mb-4">
                   We implement industry-standard security measures to protect your personal information:
                 </p>
@@ -144,7 +145,7 @@ const PrivacyPolicyPage = () => {
 
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <UserCheck className="w-6 h-6 text-gold" />
+                <UserCheck className="w-6 h-6 text-accent" />
                 Your Rights
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -156,7 +157,7 @@ const PrivacyPolicyPage = () => {
                   { title: "Portability", desc: "Receive your data in a portable format" },
                   { title: "Restrict", desc: "Limit how we process your data" },
                 ].map((right) => (
-                  <div key={right.title} className="bg-cream/30 rounded-lg p-4">
+                  <div key={right.title} className="bg-muted rounded-lg p-4">
                     <h4 className="font-semibold text-foreground mb-1">{right.title}</h4>
                     <p className="text-sm text-muted-foreground">{right.desc}</p>
                   </div>
@@ -204,7 +205,7 @@ const PrivacyPolicyPage = () => {
 
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Bell className="w-6 h-6 text-gold" />
+                <Bell className="w-6 h-6 text-accent" />
                 Policy Updates
               </h2>
               <p className="text-muted-foreground">
@@ -212,7 +213,7 @@ const PrivacyPolicyPage = () => {
               </p>
             </section>
 
-            <section className="bg-gold/10 rounded-lg p-6 border border-gold/30">
+            <section className="bg-accent/10 rounded-lg p-6 border border-accent/30">
               <h2 className="font-display text-2xl font-bold text-foreground mb-4">
                 Contact Us
               </h2>
@@ -224,6 +225,9 @@ const PrivacyPolicyPage = () => {
                 <li><strong>Phone:</strong> +880 1234-567890</li>
                 <li><strong>Address:</strong> 123 Fashion Street, Gulshan-2, Dhaka 1212, Bangladesh</li>
               </ul>
+              <Link to="/contact" className="inline-block mt-4 text-accent hover:underline">
+                Go to Contact Page →
+              </Link>
             </section>
           </motion.div>
         </div>

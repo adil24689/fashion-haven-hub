@@ -75,9 +75,7 @@ export const Footer = () => {
             <h4 className="font-semibold mb-4">Help</h4>
             <ul className="space-y-2 text-sm text-primary-foreground/70">
               <li><Link to="/faq" className="hover:text-accent transition-colors">FAQs</Link></li>
-              <li><Link to="/track-order" className="hover:text-accent transition-colors">Track Order</Link></li>
-              <li><Link to="/returns" className="hover:text-accent transition-colors">Returns & Exchange</Link></li>
-              <li><Link to="/size-guide" className="hover:text-accent transition-colors">Size Guide</Link></li>
+              <li><Link to="/return-policy" className="hover:text-accent transition-colors">Returns & Exchange</Link></li>
               <li><Link to="/contact" className="hover:text-accent transition-colors">Contact Us</Link></li>
             </ul>
           </div>
@@ -88,8 +86,6 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm text-primary-foreground/70">
               <li><Link to="/about" className="hover:text-accent transition-colors">About Us</Link></li>
               <li><Link to="/blog" className="hover:text-accent transition-colors">Fashion Blog</Link></li>
-              <li><Link to="/stores" className="hover:text-accent transition-colors">Store Locator</Link></li>
-              <li><Link to="/careers" className="hover:text-accent transition-colors">Careers</Link></li>
             </ul>
           </div>
 
@@ -120,9 +116,8 @@ export const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60">
             <p>© 2026 AlamFashion. All rights reserved.</p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/privacy" className="hover:text-accent transition-colors">Privacy Policy</Link>
-              <Link to="/terms" className="hover:text-accent transition-colors">Terms & Conditions</Link>
-              <Link to="/refund-policy" className="hover:text-accent transition-colors">Refund Policy</Link>
+              <Link to="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link>
+              <Link to="/return-policy" className="hover:text-accent transition-colors">Refund Policy</Link>
             </div>
           </div>
         </div>
