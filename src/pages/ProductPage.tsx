@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Minus, Plus, ShoppingBag, Truck, RefreshCw, Shield, ChevronRight, Home } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
@@ -14,6 +14,8 @@ import { ProductReviews } from '@/components/product/ProductReviews';
 import { ProductQA } from '@/components/product/ProductQA';
 import { SafetyInfo } from '@/components/product/SafetyInfo';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
 import product1 from '@/assets/products/product-1.jpg';
 import product2 from '@/assets/products/product-2.jpg';
@@ -53,12 +55,52 @@ const relatedProducts = [
 
 const ProductPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
   const isOutOfStock = selectedSize && product.outOfStockSizes?.includes(selectedSize);
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+    
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      size: selectedSize,
+      color: selectedColor.name,
+      image: product.images[0],
+    });
+    
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleBuyNow = () => {
+    if (!selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+    
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      size: selectedSize,
+      color: selectedColor.name,
+      image: product.images[0],
+    });
+    
+    navigate('/checkout');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -131,10 +173,10 @@ const ProductPage = () => {
                         <span className="px-6 py-3 min-w-[4rem] text-center font-medium">{quantity}</span>
                         <button onClick={() => setQuantity(quantity + 1)} className="p-3 hover:bg-secondary transition-colors"><Plus size={18} /></button>
                       </div>
-                      <Button className="flex-1 btn-primary group" size="lg"><ShoppingBag className="mr-2" size={20} />Add to Cart</Button>
+                      <Button className="flex-1 btn-primary group" size="lg" onClick={handleAddToCart}><ShoppingBag className="mr-2" size={20} />Add to Cart</Button>
                       <Button variant="outline" size="lg" onClick={() => setIsWishlisted(!isWishlisted)}><Heart size={20} className={isWishlisted ? 'fill-destructive text-destructive' : ''} /></Button>
                     </div>
-                    <Button className="w-full btn-accent" size="lg">Buy Now</Button>
+                    <Button className="w-full btn-accent" size="lg" onClick={handleBuyNow}>Buy Now</Button>
                   </>
                 ) : (
                   <NotifyMe productName={product.name} selectedSize={selectedSize} selectedColor={selectedColor.name} />
