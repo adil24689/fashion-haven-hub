@@ -16,6 +16,7 @@ import FlashSalePage from "./pages/FlashSalePage";
 import WishlistPage from "./pages/WishlistPage";
 import BlogPage from "./pages/BlogPage";
 import SearchPage from "./pages/SearchPage";
+import CheckoutPage from "./pages/CheckoutPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
