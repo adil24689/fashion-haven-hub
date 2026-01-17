@@ -6,9 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { ShippingFormData } from './ShippingForm';
 import { PaymentMethod } from './PaymentForm';
-
-import product1 from '@/assets/products/product-1.jpg';
-import product3 from '@/assets/products/product-3.jpg';
+import { useCart } from '@/contexts/CartContext';
 
 interface OrderSummaryProps {
   shippingData: ShippingFormData;
@@ -16,11 +14,6 @@ interface OrderSummaryProps {
   onConfirm: () => void;
   onBack: () => void;
 }
-
-const cartItems = [
-  { id: '1', name: 'Terracotta Wrap Maxi Dress', price: 2850, quantity: 1, size: 'M', color: 'Terracotta', image: product1 },
-  { id: '3', name: 'Soft Pink Baby Romper Set', price: 850, quantity: 2, size: '6M', color: 'Pink', image: product3 },
-];
 
 const paymentMethodNames: Record<PaymentMethod, string> = {
   card: 'Credit/Debit Card',
@@ -31,13 +24,12 @@ const paymentMethodNames: Record<PaymentMethod, string> = {
 };
 
 export const OrderSummary = ({ shippingData, paymentMethod, onConfirm, onBack }: OrderSummaryProps) => {
+  const { items, subtotal, shipping } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discount, setDiscount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal >= 2000 ? 0 : 120;
   const codFee = paymentMethod === 'cod' ? 50 : 0;
   const total = subtotal - discount + shipping + codFee;
 
@@ -74,8 +66,8 @@ export const OrderSummary = ({ shippingData, paymentMethod, onConfirm, onBack }:
 
       {/* Cart Items */}
       <div className="space-y-4">
-        {cartItems.map((item) => (
-          <div key={item.id} className="flex gap-4 p-4 bg-secondary/50 rounded-lg">
+        {items.map((item) => (
+          <div key={`${item.id}-${item.size}-${item.color}`} className="flex gap-4 p-4 bg-secondary/50 rounded-lg">
             <img src={item.image} alt={item.name} className="w-20 h-24 object-cover rounded" />
             <div className="flex-1">
               <h4 className="font-medium">{item.name}</h4>

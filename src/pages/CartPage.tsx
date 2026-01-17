@@ -6,39 +6,11 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-import product1 from '@/assets/products/product-1.jpg';
-import product2 from '@/assets/products/product-2.jpg';
-import product3 from '@/assets/products/product-3.jpg';
-
-const initialCartItems = [
-  { id: '1', name: 'Terracotta Wrap Maxi Dress', price: 2850, size: 'M', color: 'Terracotta', quantity: 1, image: product1 },
-  { id: '2', name: 'Premium Navy Cotton Shirt', price: 1450, size: 'L', color: 'Navy', quantity: 2, image: product2 },
-  { id: '3', name: 'Soft Pink Baby Romper Set', price: 850, size: '6-12M', color: 'Pink', quantity: 1, image: product3 },
-];
+import { useCart } from '@/contexts/CartContext';
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const { items, removeItem, updateQuantity, subtotal, shipping, total } = useCart();
   const [couponCode, setCouponCode] = useState('');
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
-  };
-
-  const removeItem = (id: string) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal >= 2000 ? 0 : 100;
-  const discount = 0; // Could be applied via coupon
-  const total = subtotal + shipping - discount;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -53,7 +25,7 @@ const CartPage = () => {
             Shopping Cart
           </motion.h1>
 
-          {cartItems.length === 0 ? (
+          {items.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -70,9 +42,9 @@ const CartPage = () => {
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-4">
-                {cartItems.map((item, index) => (
+                {items.map((item, index) => (
                   <motion.div
-                    key={item.id}
+                    key={`${item.id}-${item.size}-${item.color}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -111,7 +83,7 @@ const CartPage = () => {
                       <div className="flex items-end justify-between mt-4">
                         <div className="flex items-center border border-border rounded-md">
                           <button
-                            onClick={() => updateQuantity(item.id, -1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="p-2 hover:bg-secondary transition-colors"
                           >
                             <Minus size={16} />
@@ -120,7 +92,7 @@ const CartPage = () => {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="p-2 hover:bg-secondary transition-colors"
                           >
                             <Plus size={16} />
@@ -165,16 +137,10 @@ const CartPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Shipping</span>
-                      <span className={shipping === 0 ? 'text-green-600' : ''}>
+                      <span className={shipping === 0 ? 'text-accent' : ''}>
                         {shipping === 0 ? 'Free' : `৳${shipping}`}
                       </span>
                     </div>
-                    {discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount</span>
-                        <span>-৳{discount.toLocaleString()}</span>
-                      </div>
-                    )}
                     <div className="flex justify-between font-semibold text-lg pt-3 border-t border-border">
                       <span>Total</span>
                       <span>৳{total.toLocaleString()}</span>
