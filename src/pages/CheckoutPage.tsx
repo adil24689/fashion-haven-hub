@@ -11,14 +11,7 @@ import { ShippingForm, ShippingFormData } from '@/components/checkout/ShippingFo
 import { PaymentForm, PaymentMethod } from '@/components/checkout/PaymentForm';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { OrderConfirmation } from '@/components/checkout/OrderConfirmation';
-
-import product1 from '@/assets/products/product-1.jpg';
-import product3 from '@/assets/products/product-3.jpg';
-
-const cartItems = [
-  { id: '1', name: 'Terracotta Wrap Maxi Dress', price: 2850, quantity: 1, size: 'M', color: 'Terracotta', image: product1 },
-  { id: '3', name: 'Soft Pink Baby Romper Set', price: 850, quantity: 2, size: '6M', color: 'Pink', image: product3 },
-];
+import { useCart } from '@/contexts/CartContext';
 
 const steps = [
   { label: 'Shipping', description: 'Delivery address' },
@@ -28,13 +21,11 @@ const steps = [
 ];
 
 const CheckoutPage = () => {
+  const { items, subtotal, shipping, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState(0);
   const [shippingData, setShippingData] = useState<ShippingFormData | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [orderNumber, setOrderNumber] = useState('');
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal >= 2000 ? 0 : 120;
 
   const handleShippingSubmit = (data: ShippingFormData) => {
     setShippingData(data);
@@ -50,6 +41,7 @@ const CheckoutPage = () => {
     // Generate random order number
     const orderNum = `ORD${Date.now().toString().slice(-8)}`;
     setOrderNumber(orderNum);
+    clearCart();
     setCurrentStep(3);
   };
 
@@ -119,8 +111,8 @@ const CheckoutPage = () => {
                   </h3>
 
                   <div className="space-y-4 mb-6">
-                    {cartItems.map((item) => (
-                      <div key={item.id} className="flex gap-3">
+                    {items.map((item) => (
+                      <div key={`${item.id}-${item.size}-${item.color}`} className="flex gap-3">
                         <div className="relative">
                           <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded" />
                           <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
