@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, MapPin, Camera, Package, LogOut, Save, Loader2 } from 'lucide-react';
 import { z } from 'zod';
@@ -415,7 +415,12 @@ export default function ProfilePage() {
               {/* Orders Tab */}
               <TabsContent value="orders">
                 <div className="bg-card rounded-xl border border-border p-6">
-                  <h2 className="text-xl font-semibold mb-4">Order History</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold">Recent Orders</h2>
+                    <Link to="/orders">
+                      <Button variant="outline" size="sm">View All Orders</Button>
+                    </Link>
+                  </div>
 
                   {orders.length === 0 ? (
                     <div className="text-center py-12">
