@@ -1,17 +1,18 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Grid3X3, LayoutGrid, ChevronRight, Home, GitCompare } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Grid3X3, LayoutGrid, ChevronRight, Home, GitCompare, X } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ProductFilters } from '@/components/product/ProductFilters';
+import { ProductFilters, FilterState, getDefaultFilters } from '@/components/product/ProductFilters';
 import { QuickViewModal } from '@/components/product/QuickViewModal';
 import { Pagination } from '@/components/product/Pagination';
 import { Badge } from '@/components/ui/badge';
+import { useProductFiltering, SortOption, Product } from '@/hooks/useProductFiltering';
 
 import categoryMen from '@/assets/category-men.jpg';
 import categoryWomen from '@/assets/category-women.jpg';
@@ -36,16 +37,31 @@ const categoryData: Record<string, { title: string; description: string; image: 
   baby: { title: 'Baby Collection', description: 'Gentle and soft clothing for your little ones', image: categoryBaby, subcategories: ['Rompers', 'Sets', 'Accessories'] },
 };
 
-const allProducts = [
-  { id: '1', name: 'Terracotta Wrap Maxi Dress', price: 2850, originalPrice: 3500, image: product1, category: 'Women', badge: 'trending' as const, bulkOffer: 'Buy 2, Get 10% Off' },
-  { id: '2', name: 'Premium Navy Cotton Shirt', price: 1450, image: product2, category: 'Men', badge: 'new' as const },
-  { id: '3', name: 'Soft Pink Baby Romper Set', price: 850, originalPrice: 1100, image: product3, category: 'Baby', badge: 'sale' as const, bulkOffer: 'Family Pack Available' },
-  { id: '4', name: 'Khaki Boys Casual Jacket', price: 1950, image: product4, category: 'Boys', badge: 'hot' as const },
-  { id: '5', name: 'Royal Red Banarasi Saree', price: 8500, originalPrice: 10000, image: product5, category: 'Women', badge: 'trending' as const },
-  { id: '6', name: 'Purple Princess Party Dress', price: 1650, image: product6, category: 'Girls', badge: 'new' as const, bulkOffer: 'Combo: Dress + Accessories' },
-  { id: '7', name: 'Premium Slim Fit Denim Jeans', price: 2200, originalPrice: 2800, image: product7, category: 'Men', badge: 'sale' as const },
-  { id: '8', name: 'Turquoise Embroidered Kurti', price: 1850, image: product8, category: 'Women' },
+const colorMap: Record<string, string> = {
+  'Black': '#000000',
+  'White': '#FFFFFF',
+  'Red': '#EF4444',
+  'Blue': '#3B82F6',
+  'Green': '#22C55E',
+  'Yellow': '#EAB308',
+  'Pink': '#EC4899',
+  'Navy': '#1e3a5f',
+};
+
+const toProductColors = (names: string[]) => names.map(name => ({ name, value: colorMap[name] || '#888888' }));
+
+const allProducts: Product[] = [
+  { id: '1', name: 'Terracotta Wrap Maxi Dress', price: 2850, originalPrice: 3500, image: product1, category: 'Women', badge: 'trending', bulkOffer: 'Buy 2, Get 10% Off', rating: 4.8, colors: toProductColors(['Red', 'Pink']), sizes: ['S', 'M', 'L'], brand: 'ElegantWear' },
+  { id: '2', name: 'Premium Navy Cotton Shirt', price: 1450, image: product2, category: 'Men', badge: 'new', rating: 4.6, colors: toProductColors(['Navy', 'Blue', 'White']), sizes: ['M', 'L', 'XL'], brand: 'FashionHub' },
+  { id: '3', name: 'Soft Pink Baby Romper Set', price: 850, originalPrice: 1100, image: product3, category: 'Baby', badge: 'sale', bulkOffer: 'Family Pack Available', rating: 4.9, colors: toProductColors(['Pink', 'White']), sizes: ['2Y', '3Y'], brand: 'BabyComfort' },
+  { id: '4', name: 'Khaki Boys Casual Jacket', price: 1950, image: product4, category: 'Boys', badge: 'hot', rating: 4.7, colors: toProductColors(['Green', 'Blue']), sizes: ['4Y', '5Y', '6Y'], brand: 'KidStyle' },
+  { id: '5', name: 'Royal Red Banarasi Saree', price: 8500, originalPrice: 10000, image: product5, category: 'Women', badge: 'trending', rating: 4.9, colors: toProductColors(['Red']), sizes: ['S', 'M', 'L'], brand: 'ElegantWear' },
+  { id: '6', name: 'Purple Princess Party Dress', price: 1650, image: product6, category: 'Girls', badge: 'new', bulkOffer: 'Combo: Dress + Accessories', rating: 4.8, colors: toProductColors(['Pink', 'Yellow']), sizes: ['3Y', '4Y', '5Y'], brand: 'KidStyle' },
+  { id: '7', name: 'Premium Slim Fit Denim Jeans', price: 2200, originalPrice: 2800, image: product7, category: 'Men', badge: 'sale', rating: 4.5, colors: toProductColors(['Blue', 'Black']), sizes: ['M', 'L', 'XL', 'XXL'], brand: 'TrendyWear' },
+  { id: '8', name: 'Turquoise Embroidered Kurti', price: 1850, image: product8, category: 'Women', rating: 4.7, colors: toProductColors(['Blue', 'Green']), sizes: ['S', 'M', 'L', 'XL'], brand: 'TrendyWear' },
 ];
+
+const ITEMS_PER_PAGE = 12;
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
@@ -53,17 +69,97 @@ const CategoryPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [useInfiniteScroll, setUseInfiniteScroll] = useState(false);
   const [compareItems, setCompareItems] = useState<string[]>([]);
-  const [quickViewProduct, setQuickViewProduct] = useState<typeof allProducts[0] | null>(null);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [filters, setFilters] = useState<FilterState>(getDefaultFilters());
+  const [sortBy, setSortBy] = useState<SortOption>('featured');
   
   const currentCategory = categoryData[category || 'men'] || categoryData.men;
-  const products = category ? allProducts.filter(p => p.category.toLowerCase() === category.toLowerCase()) : allProducts;
-  const totalPages = Math.ceil((products.length || allProducts.length) / 12);
+  
+  const { filteredProducts, totalCount } = useProductFiltering({
+    products: allProducts,
+    filters,
+    sortBy,
+    category,
+  });
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  const handleFilterChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value as SortOption);
+    setCurrentPage(1);
+  };
 
   const toggleCompare = (productId: string) => {
     setCompareItems(prev => 
       prev.includes(productId) ? prev.filter(id => id !== productId) : prev.length < 4 ? [...prev, productId] : prev
     );
   };
+
+  // Calculate active filter count for display
+  const activeFilterCount = 
+    filters.sizes.length + 
+    filters.colors.length + 
+    filters.brands.length + 
+    filters.discount.length + 
+    filters.availability.length +
+    (filters.priceRange[0] > 0 || filters.priceRange[1] < 15000 ? 1 : 0);
+
+  // Get active filter tags for display
+  const activeFilterTags = useMemo(() => {
+    const tags: { key: string; label: string; onRemove: () => void }[] = [];
+    
+    if (filters.priceRange[0] > 0 || filters.priceRange[1] < 15000) {
+      tags.push({
+        key: 'price',
+        label: `৳${filters.priceRange[0].toLocaleString()} - ৳${filters.priceRange[1].toLocaleString()}`,
+        onRemove: () => handleFilterChange({ ...filters, priceRange: [0, 15000] }),
+      });
+    }
+    
+    filters.sizes.forEach(size => {
+      tags.push({
+        key: `size-${size}`,
+        label: `Size: ${size}`,
+        onRemove: () => handleFilterChange({ ...filters, sizes: filters.sizes.filter(s => s !== size) }),
+      });
+    });
+    
+    filters.colors.forEach(color => {
+      tags.push({
+        key: `color-${color}`,
+        label: color,
+        onRemove: () => handleFilterChange({ ...filters, colors: filters.colors.filter(c => c !== color) }),
+      });
+    });
+    
+    filters.brands.forEach(brand => {
+      tags.push({
+        key: `brand-${brand}`,
+        label: brand,
+        onRemove: () => handleFilterChange({ ...filters, brands: filters.brands.filter(b => b !== brand) }),
+      });
+    });
+    
+    filters.discount.forEach(discount => {
+      tags.push({
+        key: `discount-${discount}`,
+        label: discount,
+        onRemove: () => handleFilterChange({ ...filters, discount: filters.discount.filter(d => d !== discount) }),
+      });
+    });
+    
+    return tags;
+  }, [filters]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -112,7 +208,10 @@ const CategoryPage = () => {
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Filters Sidebar - Desktop */}
               <div className="hidden lg:block">
-                <ProductFilters />
+                <ProductFilters 
+                  filters={filters} 
+                  onFilterChange={handleFilterChange} 
+                />
               </div>
 
               {/* Products Grid */}
@@ -121,9 +220,16 @@ const CategoryPage = () => {
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
                   <div className="flex items-center gap-4">
                     <div className="lg:hidden">
-                      <ProductFilters isMobile />
+                      <ProductFilters 
+                        filters={filters} 
+                        onFilterChange={handleFilterChange} 
+                        isMobile 
+                      />
                     </div>
-                    <span className="text-sm text-muted-foreground">{(products.length > 0 ? products : allProducts).length} products</span>
+                    <span className="text-sm text-muted-foreground">
+                      {totalCount} product{totalCount !== 1 ? 's' : ''}
+                      {activeFilterCount > 0 && ` (filtered)`}
+                    </span>
                     {compareItems.length > 0 && (
                       <Button variant="outline" size="sm">
                         <GitCompare size={14} className="mr-1" /> Compare ({compareItems.length})
@@ -135,44 +241,114 @@ const CategoryPage = () => {
                       <button onClick={() => setGridCols(3)} className={`p-2 rounded ${gridCols === 3 ? 'bg-secondary' : ''}`}><Grid3X3 size={18} /></button>
                       <button onClick={() => setGridCols(4)} className={`p-2 rounded ${gridCols === 4 ? 'bg-secondary' : ''}`}><LayoutGrid size={18} /></button>
                     </div>
-                    <Select defaultValue="featured">
-                      <SelectTrigger className="w-40"><SelectValue placeholder="Sort by" /></SelectTrigger>
+                    <Select value={sortBy} onValueChange={handleSortChange}>
+                      <SelectTrigger className="w-44">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="featured">Featured</SelectItem>
                         <SelectItem value="newest">Newest</SelectItem>
                         <SelectItem value="price-low">Price: Low to High</SelectItem>
                         <SelectItem value="price-high">Price: High to Low</SelectItem>
+                        <SelectItem value="rating">Top Rated</SelectItem>
+                        <SelectItem value="name-asc">Name: A to Z</SelectItem>
+                        <SelectItem value="name-desc">Name: Z to A</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                {/* Products */}
-                <div className={`grid grid-cols-2 md:grid-cols-3 ${gridCols === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 md:gap-6`}>
-                  {(products.length > 0 ? products : allProducts).map((product, index) => (
-                    <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="relative">
-                      {product.bulkOffer && (
-                        <Badge className="absolute top-2 left-2 z-10 bg-accent text-accent-foreground text-xs">{product.bulkOffer}</Badge>
-                      )}
-                      <ProductCard {...product} />
-                      <div className="absolute bottom-20 left-4 right-4 flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
-                        <label className="flex items-center gap-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs cursor-pointer">
-                          <Checkbox checked={compareItems.includes(product.id)} onCheckedChange={() => toggleCompare(product.id)} />
-                          Compare
-                        </label>
-                      </div>
+                {/* Active Filter Tags */}
+                <AnimatePresence>
+                  {activeFilterTags.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-wrap gap-2 mb-6"
+                    >
+                      {activeFilterTags.map(tag => (
+                        <motion.div
+                          key={tag.key}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                        >
+                          <Badge 
+                            variant="secondary" 
+                            className="pl-3 pr-1 py-1.5 gap-1 cursor-pointer hover:bg-secondary/80"
+                            onClick={tag.onRemove}
+                          >
+                            {tag.label}
+                            <X size={14} className="ml-1" />
+                          </Badge>
+                        </motion.div>
+                      ))}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => handleFilterChange(getDefaultFilters())}
+                      >
+                        Clear all
+                      </Button>
                     </motion.div>
-                  ))}
-                </div>
+                  )}
+                </AnimatePresence>
+
+                {/* Products */}
+                {paginatedProducts.length > 0 ? (
+                  <div className={`grid grid-cols-2 md:grid-cols-3 ${gridCols === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 md:gap-6`}>
+                    {paginatedProducts.map((product, index) => (
+                      <motion.div 
+                        key={product.id} 
+                        initial={{ opacity: 0, y: 20 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        transition={{ delay: index * 0.05 }} 
+                        className="relative"
+                      >
+                        {product.bulkOffer && (
+                          <Badge className="absolute top-2 left-2 z-10 bg-accent text-accent-foreground text-xs">{product.bulkOffer}</Badge>
+                        )}
+                        <ProductCard {...product} />
+                        <div className="absolute bottom-20 left-4 right-4 flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
+                          <label className="flex items-center gap-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs cursor-pointer">
+                            <Checkbox checked={compareItems.includes(product.id)} onCheckedChange={() => toggleCompare(product.id)} />
+                            Compare
+                          </label>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-16"
+                  >
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                      <Grid3X3 className="w-10 h-10 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">No products found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Try adjusting your filters or search criteria
+                    </p>
+                    <Button variant="outline" onClick={() => handleFilterChange(getDefaultFilters())}>
+                      Clear Filters
+                    </Button>
+                  </motion.div>
+                )}
 
                 {/* Pagination */}
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                  showLoadMore={useInfiniteScroll}
-                  onLoadMore={() => setCurrentPage(prev => prev + 1)}
-                />
+                {paginatedProducts.length > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    showLoadMore={useInfiniteScroll}
+                    onLoadMore={() => setCurrentPage(prev => prev + 1)}
+                  />
+                )}
               </div>
             </div>
           </div>
