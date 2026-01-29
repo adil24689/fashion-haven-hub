@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingBag, Eye } from 'lucide-react';
+import { Heart, ShoppingBag, Eye, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
 interface ProductCardProps {
   id: string;
@@ -14,6 +16,7 @@ interface ProductCardProps {
   category: string;
   badge?: 'trending' | 'hot' | 'new' | 'sale';
   rating?: number;
+  onQuickView?: () => void;
 }
 
 export const ProductCard = ({
@@ -25,11 +28,34 @@ export const ProductCard = ({
   category,
   badge,
   rating = 4.5,
+  onQuickView,
 }: ProductCardProps) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+  const { addItem } = useCart();
 
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    addItem({
+      id,
+      name,
+      price,
+      quantity: 1,
+      size: 'One Size',
+      color: 'Default',
+      image,
+    });
+    
+    setJustAdded(true);
+    toast.success(`${name} added to cart!`);
+    
+    setTimeout(() => setJustAdded(false), 2000);
+  };
 
   return (
     <motion.div
@@ -75,21 +101,21 @@ export const ProductCard = ({
             className="rounded-full shadow-lg"
             onClick={(e) => {
               e.preventDefault();
-              // Quick view logic
+              onQuickView?.();
             }}
           >
             <Eye size={18} />
           </Button>
           <Button
             size="icon"
-            variant="secondary"
-            className="rounded-full shadow-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              // Add to cart logic
-            }}
+            variant={justAdded ? "default" : "secondary"}
+            className={cn(
+              "rounded-full shadow-lg transition-all",
+              justAdded && "bg-green-500 hover:bg-green-600"
+            )}
+            onClick={handleQuickAdd}
           >
-            <ShoppingBag size={18} />
+            {justAdded ? <Check size={18} /> : <ShoppingBag size={18} />}
           </Button>
         </motion.div>
 
