@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          image: string
+          name: string
+          price: number
+          product_id: string
+          quantity: number
+          size: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          image: string
+          name: string
+          price: number
+          product_id: string
+          quantity?: number
+          size: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          image?: string
+          name?: string
+          price?: number
+          product_id?: string
+          quantity?: number
+          size?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -106,6 +148,42 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlist_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          image: string
+          name: string
+          original_price: number | null
+          price: number
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          image: string
+          name: string
+          original_price?: number | null
+          price: number
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          image?: string
+          name?: string
+          original_price?: number | null
+          price?: number
+          product_id?: string
           user_id?: string
         }
         Relationships: []
