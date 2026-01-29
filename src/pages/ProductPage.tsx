@@ -222,7 +222,7 @@ const ProductPage = () => {
                 </TabsContent>
                 
                 <TabsContent value="reviews" className="pt-6">
-                  <ProductReviews rating={product.rating} reviewCount={product.reviewCount} />
+                  <ProductReviews productId={id || product.id} />
                 </TabsContent>
 
                 <TabsContent value="qa" className="pt-6">
