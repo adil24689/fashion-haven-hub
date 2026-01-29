@@ -21,10 +21,7 @@ import BlogPage from "./pages/BlogPage";
 import BlogPostPage from "./pages/BlogPostPage";
 import SearchPage from "./pages/SearchPage";
 import CheckoutPage from "./pages/CheckoutPage";
-import AuthPage from "./pages/AuthPage";
-import ProfilePage from "./pages/ProfilePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import OrderHistoryPage from "./pages/OrderHistoryPage";
 import CustomerLoginPage from "./pages/CustomerLoginPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
@@ -59,9 +56,6 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogPostPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/orders" element={<OrderHistoryPage />} />
               <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
               {/* Customer Routes */}
               <Route path="/login" element={<CustomerLoginPage />} />
