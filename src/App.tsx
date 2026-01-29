@@ -18,6 +18,7 @@ import FAQPage from "./pages/FAQPage";
 import FlashSalePage from "./pages/FlashSalePage";
 import WishlistPage from "./pages/WishlistPage";
 import BlogPage from "./pages/BlogPage";
+import BlogPostPage from "./pages/BlogPostPage";
 import SearchPage from "./pages/SearchPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import AuthPage from "./pages/AuthPage";
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/flash-sale" element={<FlashSalePage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:slug" element={<BlogPostPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/auth" element={<AuthPage />} />
