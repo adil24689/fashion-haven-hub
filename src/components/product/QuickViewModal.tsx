@@ -1,32 +1,44 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Heart, Minus, Plus, ShoppingBag, Star, X } from 'lucide-react';
+import { Heart, Minus, Plus, ShoppingBag, Star, X, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { toast } from 'sonner';
+
+interface QuickViewProduct {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  category: string;
+  rating?: number;
+  sizes?: string[];
+  colors?: { name: string; value: string }[];
+  description?: string;
+}
 
 interface QuickViewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    originalPrice?: number;
-    image: string;
-    category: string;
-    rating?: number;
-    sizes?: string[];
-    colors?: { name: string; value: string }[];
-    description?: string;
-  };
+  product: QuickViewProduct | null;
 }
 
 export const QuickViewModal = ({ isOpen, onClose, product }: QuickViewModalProps) => {
+  const { addItem } = useCart();
+  const { isInWishlist, toggleItem } = useWishlist();
+  
   const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0]);
+  const [selectedColor, setSelectedColor] = useState<{ name: string; value: string } | undefined>();
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
 
+  if (!product) return null;
+
+  const isWishlisted = isInWishlist(product.id);
+  
   const discount = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
     : 0;
@@ -40,35 +52,78 @@ export const QuickViewModal = ({ isOpen, onClose, product }: QuickViewModalProps
 
   const sizes = product.sizes || defaultSizes;
   const colors = product.colors || defaultColors;
+  const currentColor = selectedColor || colors[0];
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+    
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      size: selectedSize,
+      color: currentColor.name,
+      image: product.image,
+    });
+    
+    toast.success(`${product.name} added to cart!`);
+    onClose();
+  };
+
+  const handleToggleWishlist = () => {
+    toggleItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      image: product.image,
+      category: product.category,
+    });
+    toast.success(isWishlisted ? `${product.name} removed from wishlist` : `${product.name} added to wishlist!`);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+      // Reset state when closing
+      setSelectedSize('');
+      setSelectedColor(undefined);
+      setQuantity(1);
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-4xl p-0 overflow-hidden gap-0">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-10 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors"
+          aria-label="Close"
         >
           <X size={20} />
         </button>
         
         <div className="grid md:grid-cols-2">
           {/* Image */}
-          <div className="aspect-square bg-secondary">
+          <div className="aspect-square bg-secondary relative overflow-hidden">
             <img
               src={product.image}
               alt={product.name}
               className="w-full h-full object-cover"
             />
-          </div>
-
-          {/* Product Info */}
-          <div className="p-6 space-y-4">
             {discount > 0 && (
-              <span className="inline-block bg-destructive text-destructive-foreground text-sm font-semibold px-3 py-1 rounded-full">
+              <span className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-sm font-semibold px-3 py-1 rounded-full">
                 {discount}% Off
               </span>
             )}
+          </div>
 
+          {/* Product Info */}
+          <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-1">
                 {product.category}
@@ -104,15 +159,15 @@ export const QuickViewModal = ({ isOpen, onClose, product }: QuickViewModalProps
 
             {/* Color Selection */}
             <div>
-              <h4 className="text-sm font-medium mb-2">Color: {selectedColor?.name}</h4>
+              <h4 className="text-sm font-medium mb-2">Color: {currentColor.name}</h4>
               <div className="flex gap-2">
                 {colors.map((color) => (
                   <button
                     key={color.name}
                     onClick={() => setSelectedColor(color)}
                     className={cn(
-                      'w-8 h-8 rounded-full border-2 transition-all',
-                      selectedColor?.name === color.name ? 'border-foreground scale-110' : 'border-transparent'
+                      'w-8 h-8 rounded-full border-2 transition-all hover:scale-110',
+                      currentColor.name === color.name ? 'border-foreground scale-110' : 'border-border'
                     )}
                     style={{ backgroundColor: color.value }}
                     title={color.name}
@@ -123,14 +178,19 @@ export const QuickViewModal = ({ isOpen, onClose, product }: QuickViewModalProps
 
             {/* Size Selection */}
             <div>
-              <h4 className="text-sm font-medium mb-2">Size</h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium">Size</h4>
+                {!selectedSize && (
+                  <span className="text-xs text-muted-foreground">Please select a size</span>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2">
                 {sizes.map((size) => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
                     className={cn(
-                      'w-12 h-10 rounded-md border text-sm font-medium transition-all',
+                      'min-w-12 h-10 px-3 rounded-md border text-sm font-medium transition-all',
                       selectedSize === size
                         ? 'border-accent bg-accent text-accent-foreground'
                         : 'border-border hover:border-accent'
@@ -143,11 +203,12 @@ export const QuickViewModal = ({ isOpen, onClose, product }: QuickViewModalProps
             </div>
 
             {/* Quantity & Actions */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <div className="flex items-center border border-border rounded-md">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="p-2 hover:bg-secondary transition-colors"
+                  aria-label="Decrease quantity"
                 >
                   <Minus size={16} />
                 </button>
@@ -155,12 +216,13 @@ export const QuickViewModal = ({ isOpen, onClose, product }: QuickViewModalProps
                 <button
                   onClick={() => setQuantity(quantity + 1)}
                   className="p-2 hover:bg-secondary transition-colors"
+                  aria-label="Increase quantity"
                 >
                   <Plus size={16} />
                 </button>
               </div>
 
-              <Button className="flex-1 btn-primary" size="lg">
+              <Button className="flex-1 btn-primary" size="lg" onClick={handleAddToCart}>
                 <ShoppingBag className="mr-2" size={18} />
                 Add to Cart
               </Button>
@@ -168,12 +230,23 @@ export const QuickViewModal = ({ isOpen, onClose, product }: QuickViewModalProps
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => setIsWishlisted(!isWishlisted)}
+                onClick={handleToggleWishlist}
+                aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <Heart
                   size={18}
                   className={isWishlisted ? 'fill-destructive text-destructive' : ''}
                 />
+              </Button>
+            </div>
+
+            {/* View Full Details Link */}
+            <div className="pt-2">
+              <Button variant="link" asChild className="p-0 h-auto text-sm">
+                <Link to={`/product/${product.id}`} onClick={onClose}>
+                  View Full Details
+                  <ExternalLink size={14} className="ml-1" />
+                </Link>
               </Button>
             </div>
           </div>
