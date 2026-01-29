@@ -25,6 +25,10 @@ import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
+import CustomerLoginPage from "./pages/CustomerLoginPage";
+import MyAccountPage from "./pages/MyAccountPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +63,12 @@ const App = () => (
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/orders" element={<OrderHistoryPage />} />
               <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+              {/* Customer Routes */}
+              <Route path="/login" element={<CustomerLoginPage />} />
+              <Route path="/myaccount" element={<MyAccountPage />} />
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

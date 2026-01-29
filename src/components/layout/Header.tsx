@@ -197,11 +197,11 @@ export const Header = () => {
             {/* User */}
             {!loading && (
               user ? (
-                <Link to="/profile" className="p-2 hover:bg-secondary rounded-full transition-colors" title="My Account">
+                <Link to="/myaccount" className="p-2 hover:bg-secondary rounded-full transition-colors" title="My Account">
                   <User size={20} />
                 </Link>
               ) : (
-                <Link to="/auth" className="p-2 hover:bg-secondary rounded-full transition-colors" title="Sign In">
+                <Link to="/login" className="p-2 hover:bg-secondary rounded-full transition-colors" title="Sign In">
                   <LogIn size={20} />
                 </Link>
               )
