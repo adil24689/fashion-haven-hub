@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { SlidersHorizontal, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
-interface FilterState {
+export interface FilterState {
   priceRange: [number, number];
   sizes: string[];
   colors: string[];
@@ -16,7 +16,8 @@ interface FilterState {
 }
 
 interface ProductFiltersProps {
-  onFilterChange?: (filters: FilterState) => void;
+  filters: FilterState;
+  onFilterChange: (filters: FilterState) => void;
   className?: string;
   isMobile?: boolean;
 }
@@ -35,15 +36,16 @@ const colors = [
 const brands = ['FashionHub', 'TrendyWear', 'KidStyle', 'BabyComfort', 'ElegantWear'];
 const discountOptions = ['10% or more', '20% or more', '30% or more', '50% or more'];
 
-export const ProductFilters = ({ onFilterChange, className, isMobile = false }: ProductFiltersProps) => {
-  const [filters, setFilters] = useState<FilterState>({
-    priceRange: [0, 15000],
-    sizes: [],
-    colors: [],
-    brands: [],
-    discount: [],
-    availability: [],
-  });
+export const getDefaultFilters = (): FilterState => ({
+  priceRange: [0, 15000],
+  sizes: [],
+  colors: [],
+  brands: [],
+  discount: [],
+  availability: [],
+});
+
+export const ProductFilters = ({ filters, onFilterChange, className, isMobile = false }: ProductFiltersProps) => {
   const [expandedSections, setExpandedSections] = useState({
     price: true,
     size: true,
@@ -58,24 +60,19 @@ export const ProductFilters = ({ onFilterChange, className, isMobile = false }: 
   };
 
   const toggleFilter = (category: keyof FilterState, value: string) => {
-    setFilters(prev => {
-      const current = prev[category] as string[];
-      const updated = current.includes(value)
-        ? current.filter(v => v !== value)
-        : [...current, value];
-      return { ...prev, [category]: updated };
-    });
+    const current = filters[category] as string[];
+    const updated = current.includes(value)
+      ? current.filter(v => v !== value)
+      : [...current, value];
+    onFilterChange({ ...filters, [category]: updated });
+  };
+
+  const updatePriceRange = (value: [number, number]) => {
+    onFilterChange({ ...filters, priceRange: value });
   };
 
   const clearFilters = () => {
-    setFilters({
-      priceRange: [0, 15000],
-      sizes: [],
-      colors: [],
-      brands: [],
-      discount: [],
-      availability: [],
-    });
+    onFilterChange(getDefaultFilters());
   };
 
   const activeFiltersCount = 
@@ -113,7 +110,7 @@ export const ProductFilters = ({ onFilterChange, className, isMobile = false }: 
           <div className="space-y-4">
             <Slider
               value={filters.priceRange}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value as [number, number] }))}
+              onValueChange={(value) => updatePriceRange(value as [number, number])}
               min={0}
               max={15000}
               step={100}
@@ -133,7 +130,7 @@ export const ProductFilters = ({ onFilterChange, className, isMobile = false }: 
           onClick={() => toggleSection('size')}
           className="flex items-center justify-between w-full font-medium mb-3"
         >
-          <span>Size</span>
+          <span>Size {filters.sizes.length > 0 && `(${filters.sizes.length})`}</span>
           {expandedSections.size ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         {expandedSections.size && (
@@ -162,7 +159,7 @@ export const ProductFilters = ({ onFilterChange, className, isMobile = false }: 
           onClick={() => toggleSection('color')}
           className="flex items-center justify-between w-full font-medium mb-3"
         >
-          <span>Color</span>
+          <span>Color {filters.colors.length > 0 && `(${filters.colors.length})`}</span>
           {expandedSections.color ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         {expandedSections.color && (
@@ -191,7 +188,7 @@ export const ProductFilters = ({ onFilterChange, className, isMobile = false }: 
           onClick={() => toggleSection('brand')}
           className="flex items-center justify-between w-full font-medium mb-3"
         >
-          <span>Brand</span>
+          <span>Brand {filters.brands.length > 0 && `(${filters.brands.length})`}</span>
           {expandedSections.brand ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         {expandedSections.brand && (
@@ -215,7 +212,7 @@ export const ProductFilters = ({ onFilterChange, className, isMobile = false }: 
           onClick={() => toggleSection('discount')}
           className="flex items-center justify-between w-full font-medium mb-3"
         >
-          <span>Discount</span>
+          <span>Discount {filters.discount.length > 0 && `(${filters.discount.length})`}</span>
           {expandedSections.discount ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         {expandedSections.discount && (
