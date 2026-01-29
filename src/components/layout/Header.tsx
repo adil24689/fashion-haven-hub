@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
@@ -47,13 +47,33 @@ const categories = [
 ];
 
 export const Header = () => {
+  const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { user, loading } = useAuth();
   const { items, itemCount, subtotal, removeItem } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    } else if (e.key === 'Escape') {
+      setIsSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -141,16 +161,24 @@ export const Header = () => {
               <AnimatePresence>
                 {isSearchOpen && (
                   <motion.div
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="absolute right-0 top-full mt-2 overflow-hidden"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 z-50"
                   >
-                    <Input
-                      placeholder="Search products..."
-                      className="w-64 shadow-lg"
-                      autoFocus
-                    />
+                    <form onSubmit={handleSearch} className="flex items-center gap-2">
+                      <Input
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
+                        className="w-64 shadow-lg bg-card"
+                        autoFocus
+                      />
+                      <Button type="submit" size="icon" className="shadow-lg shrink-0">
+                        <Search size={18} />
+                      </Button>
+                    </form>
                   </motion.div>
                 )}
               </AnimatePresence>
