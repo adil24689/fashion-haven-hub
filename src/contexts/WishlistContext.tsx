@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface WishlistItem {
   id: string;
@@ -17,6 +19,7 @@ interface WishlistContextType {
   toggleItem: (item: WishlistItem) => void;
   clearWishlist: () => void;
   itemCount: number;
+  isLoading: boolean;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
@@ -24,29 +27,133 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 const WISHLIST_STORAGE_KEY = 'wishlist';
 
 export const WishlistProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<WishlistItem[]>(() => {
-    if (typeof window !== 'undefined') {
+  const { user } = useAuth();
+  const [items, setItems] = useState<WishlistItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load wishlist from database or localStorage
+  const loadWishlist = useCallback(async () => {
+    if (user) {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('wishlist_items')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        const wishlistItems: WishlistItem[] = (data || []).map(item => ({
+          id: item.product_id,
+          name: item.name,
+          price: Number(item.price),
+          originalPrice: item.original_price ? Number(item.original_price) : undefined,
+          image: item.image,
+          category: item.category,
+        }));
+
+        setItems(wishlistItems);
+        
+        // Clear localStorage after syncing to DB
+        localStorage.removeItem(WISHLIST_STORAGE_KEY);
+      } catch (error) {
+        console.error('Error loading wishlist:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Load from localStorage for guests
       const saved = localStorage.getItem(WISHLIST_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      setItems(saved ? JSON.parse(saved) : []);
     }
-    return [];
-  });
+  }, [user]);
 
-  // Persist to localStorage
+  // Sync localStorage wishlist to database on login
+  const syncLocalWishlistToDb = useCallback(async () => {
+    if (!user) return;
+
+    const localWishlist = localStorage.getItem(WISHLIST_STORAGE_KEY);
+    if (!localWishlist) return;
+
+    const localItems: WishlistItem[] = JSON.parse(localWishlist);
+    if (localItems.length === 0) return;
+
+    try {
+      for (const item of localItems) {
+        await supabase
+          .from('wishlist_items')
+          .upsert({
+            user_id: user.id,
+            product_id: item.id,
+            name: item.name,
+            price: item.price,
+            original_price: item.originalPrice,
+            image: item.image,
+            category: item.category,
+          }, {
+            onConflict: 'user_id,product_id'
+          });
+      }
+      localStorage.removeItem(WISHLIST_STORAGE_KEY);
+    } catch (error) {
+      console.error('Error syncing wishlist:', error);
+    }
+  }, [user]);
+
   useEffect(() => {
-    localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    if (user) {
+      syncLocalWishlistToDb().then(() => loadWishlist());
+    } else {
+      loadWishlist();
+    }
+  }, [user, loadWishlist, syncLocalWishlistToDb]);
 
-  const addItem = (newItem: WishlistItem) => {
-    setItems(current => {
-      const exists = current.some(item => item.id === newItem.id);
-      if (exists) return current;
-      return [...current, newItem];
-    });
+  // Persist to localStorage for guests
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
+    }
+  }, [items, user]);
+
+  const addItem = async (newItem: WishlistItem) => {
+    const exists = items.some(item => item.id === newItem.id);
+    if (exists) return;
+
+    setItems(current => [...current, newItem]);
+
+    if (user) {
+      try {
+        await supabase
+          .from('wishlist_items')
+          .insert({
+            user_id: user.id,
+            product_id: newItem.id,
+            name: newItem.name,
+            price: newItem.price,
+            original_price: newItem.originalPrice,
+            image: newItem.image,
+            category: newItem.category,
+          });
+      } catch (error) {
+        console.error('Error adding to wishlist:', error);
+      }
+    }
   };
 
-  const removeItem = (id: string) => {
+  const removeItem = async (id: string) => {
     setItems(current => current.filter(item => item.id !== id));
+
+    if (user) {
+      try {
+        await supabase
+          .from('wishlist_items')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('product_id', id);
+      } catch (error) {
+        console.error('Error removing from wishlist:', error);
+      }
+    }
   };
 
   const isInWishlist = (id: string) => {
@@ -61,8 +168,19 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const clearWishlist = () => {
+  const clearWishlist = async () => {
     setItems([]);
+
+    if (user) {
+      try {
+        await supabase
+          .from('wishlist_items')
+          .delete()
+          .eq('user_id', user.id);
+      } catch (error) {
+        console.error('Error clearing wishlist:', error);
+      }
+    }
   };
 
   const itemCount = items.length;
@@ -77,6 +195,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
         toggleItem,
         clearWishlist,
         itemCount,
+        isLoading,
       }}
     >
       {children}
