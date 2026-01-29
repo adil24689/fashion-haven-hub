@@ -3,6 +3,7 @@ import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from '@/components/home/HeroSection';
 import { CategoryGrid } from '@/components/home/CategoryGrid';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
+import { ProductRecommendations } from '@/components/home/ProductRecommendations';
 import { PromoBanner } from '@/components/home/PromoBanner';
 import { Testimonials } from '@/components/home/Testimonials';
 
@@ -14,6 +15,7 @@ const Index = () => {
         <HeroSection />
         <CategoryGrid />
         <FeaturedProducts />
+        <ProductRecommendations />
         <PromoBanner />
         <Testimonials />
       </main>
