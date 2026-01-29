@@ -9,9 +9,11 @@ import {
   Menu, 
   X,
   ChevronDown,
-  LogIn
+  LogIn,
+  Trash2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 
@@ -47,8 +49,9 @@ export const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { user, loading } = useAuth();
-  const { itemCount } = useCart();
+  const { items, itemCount, subtotal, removeItem } = useCart();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -169,15 +172,117 @@ export const Header = () => {
               )
             )}
 
-            {/* Cart */}
-            <Link to="/cart" className="relative p-2 hover:bg-secondary rounded-full transition-colors">
-              <ShoppingBag size={20} />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center font-medium">
-                  {itemCount > 99 ? '99+' : itemCount}
-                </span>
-              )}
-            </Link>
+            {/* Cart with Mini Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setIsCartOpen(true)}
+              onMouseLeave={() => setIsCartOpen(false)}
+            >
+              <Link to="/cart" className="relative p-2 hover:bg-secondary rounded-full transition-colors block">
+                <ShoppingBag size={20} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center font-medium">
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </span>
+                )}
+              </Link>
+              
+              {/* Mini Cart Dropdown */}
+              <AnimatePresence>
+                {isCartOpen && items.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-80 bg-card shadow-xl rounded-lg border border-border z-50 overflow-hidden"
+                  >
+                    {/* Cart Header */}
+                    <div className="px-4 py-3 bg-secondary/50 border-b border-border">
+                      <h3 className="font-semibold text-sm">Shopping Cart ({itemCount})</h3>
+                    </div>
+                    
+                    {/* Cart Items */}
+                    <div className="max-h-72 overflow-y-auto">
+                      {items.slice(0, 4).map((item) => (
+                        <div key={`${item.id}-${item.size}-${item.color}`} className="flex gap-3 p-3 border-b border-border last:border-b-0 hover:bg-secondary/30 transition-colors">
+                          <img 
+                            src={item.image} 
+                            alt={item.name}
+                            className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm line-clamp-1">{item.name}</h4>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {item.size} • {item.color}
+                            </p>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-sm font-semibold">৳{item.price.toLocaleString()}</span>
+                              <span className="text-xs text-muted-foreground">Qty: {item.quantity}</span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              removeItem(item.id);
+                            }}
+                            className="p-1 hover:bg-destructive/10 rounded text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      {items.length > 4 && (
+                        <div className="px-4 py-2 text-center text-xs text-muted-foreground bg-secondary/30">
+                          +{items.length - 4} more items in cart
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Cart Footer */}
+                    <div className="p-4 bg-secondary/30 border-t border-border space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Subtotal:</span>
+                        <span className="font-semibold">৳{subtotal.toLocaleString()}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link to="/cart">
+                          <Button variant="outline" size="sm" className="w-full">
+                            View Cart
+                          </Button>
+                        </Link>
+                        <Link to="/checkout">
+                          <Button size="sm" className="w-full btn-primary">
+                            Checkout
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Empty Cart Dropdown */}
+              <AnimatePresence>
+                {isCartOpen && items.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-card shadow-xl rounded-lg border border-border z-50 p-6 text-center"
+                  >
+                    <ShoppingBag size={32} className="mx-auto text-muted-foreground mb-3" />
+                    <p className="text-sm text-muted-foreground mb-3">Your cart is empty</p>
+                    <Link to="/category/women">
+                      <Button size="sm" variant="outline" className="w-full">
+                        Start Shopping
+                      </Button>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
