@@ -1,20 +1,28 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Package, Heart, MapPin, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { User, Package, Heart, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import OrderHistory from '@/components/account/OrderHistory';
+import ProfileEditor from '@/components/account/ProfileEditor';
 
 const MyAccountPage = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { isCustomer, loading: roleLoading } = useUserRole();
+  const { loading: roleLoading } = useUserRole();
   const [profile, setProfile] = useState<any>(null);
-  const [orderCount, setOrderCount] = useState(0);
+  const [stats, setStats] = useState({
+    orderCount: 0,
+    wishlistCount: 0,
+    reviewCount: 0,
+    totalSpent: 0,
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -31,17 +39,37 @@ const MyAccountPage = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (profileData) setProfile(profileData);
 
-      // Fetch order count
-      const { count } = await supabase
+      // Fetch order stats
+      const { data: orders } = await supabase
         .from('orders')
-        .select('*', { count: 'exact', head: true })
+        .select('total')
         .eq('user_id', user.id);
       
-      if (count !== null) setOrderCount(count);
+      const orderCount = orders?.length || 0;
+      const totalSpent = orders?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
+
+      // Fetch wishlist count
+      const { count: wishlistCount } = await supabase
+        .from('wishlist_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Fetch review count
+      const { count: reviewCount } = await supabase
+        .from('reviews')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setStats({
+        orderCount,
+        wishlistCount: wishlistCount || 0,
+        reviewCount: reviewCount || 0,
+        totalSpent,
+      });
     };
 
     fetchData();
@@ -60,13 +88,6 @@ const MyAccountPage = () => {
     );
   }
 
-  const menuItems = [
-    { icon: Package, label: 'My Orders', href: '/orders', count: orderCount },
-    { icon: Heart, label: 'Wishlist', href: '/wishlist' },
-    { icon: MapPin, label: 'Addresses', href: '/profile' },
-    { icon: Settings, label: 'Account Settings', href: '/profile' },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -80,8 +101,12 @@ const MyAccountPage = () => {
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-6 md:p-8 mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary-foreground" />
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-8 h-8 text-primary-foreground" />
+                  )}
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold">
@@ -95,54 +120,65 @@ const MyAccountPage = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-card rounded-xl p-4 border border-border text-center">
-                <p className="text-2xl font-bold text-primary">{orderCount}</p>
+                <p className="text-2xl font-bold text-primary">{stats.orderCount}</p>
                 <p className="text-sm text-muted-foreground">Total Orders</p>
               </div>
               <div className="bg-card rounded-xl p-4 border border-border text-center">
-                <p className="text-2xl font-bold text-accent">0</p>
+                <p className="text-2xl font-bold text-accent">{stats.wishlistCount}</p>
                 <p className="text-sm text-muted-foreground">Wishlist Items</p>
               </div>
               <div className="bg-card rounded-xl p-4 border border-border text-center">
-                <p className="text-2xl font-bold text-green-600">0</p>
+                <p className="text-2xl font-bold text-green-600">{stats.reviewCount}</p>
                 <p className="text-sm text-muted-foreground">Reviews</p>
               </div>
               <div className="bg-card rounded-xl p-4 border border-border text-center">
-                <p className="text-2xl font-bold text-purple-600">৳0</p>
+                <p className="text-2xl font-bold text-purple-600">৳{stats.totalSpent.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Total Spent</p>
               </div>
             </div>
 
-            {/* Menu Items */}
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              {menuItems.map((item, index) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors ${
-                    index !== menuItems.length - 1 ? 'border-b border-border' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon className="w-5 h-5 text-muted-foreground" />
-                    <span className="font-medium">{item.label}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {item.count !== undefined && (
-                      <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
-                        {item.count}
-                      </span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {/* Tabs Section */}
+            <Tabs defaultValue="orders" className="mb-8">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="orders" className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  <span className="hidden sm:inline">Orders</span>
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  <span className="hidden sm:inline">Profile</span>
+                </TabsTrigger>
+                <TabsTrigger value="wishlist" className="flex items-center gap-2">
+                  <Heart className="w-4 h-4" />
+                  <span className="hidden sm:inline">Wishlist</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="orders" className="bg-card rounded-xl border border-border p-6">
+                <OrderHistory />
+              </TabsContent>
+              
+              <TabsContent value="profile" className="bg-card rounded-xl border border-border p-6">
+                <ProfileEditor />
+              </TabsContent>
+              
+              <TabsContent value="wishlist" className="bg-card rounded-xl border border-border p-6">
+                <div className="text-center py-8">
+                  <Heart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-semibold mb-2">Your Wishlist</h3>
+                  <p className="text-muted-foreground mb-4">View and manage your saved items</p>
+                  <Button asChild variant="outline">
+                    <a href="/wishlist">Go to Wishlist</a>
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
 
             {/* Sign Out */}
             <Button
               onClick={handleSignOut}
               variant="outline"
-              className="w-full mt-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
