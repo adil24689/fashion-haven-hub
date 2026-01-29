@@ -5,6 +5,7 @@ import { Heart, ShoppingBag, Eye, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 import { toast } from 'sonner';
 
 interface ProductCardProps {
@@ -30,10 +31,19 @@ export const ProductCard = ({
   rating = 4.5,
   onQuickView,
 }: ProductCardProps) => {
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const { addItem } = useCart();
+  const { isInWishlist, toggleItem } = useWishlist();
+  
+  const isWishlisted = isInWishlist(id);
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleItem({ id, name, price, originalPrice, image, category });
+    toast.success(isWishlisted ? `${name} removed from wishlist` : `${name} added to wishlist!`);
+  };
 
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
 
@@ -121,10 +131,7 @@ export const ProductCard = ({
 
         {/* Wishlist Button */}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            setIsWishlisted(!isWishlisted);
-          }}
+          onClick={handleToggleWishlist}
           className="absolute top-3 right-3 p-2 bg-card/90 backdrop-blur-sm rounded-full shadow-md hover:bg-card transition-colors"
         >
           <Heart

@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 const categories = [
   { 
@@ -52,6 +53,7 @@ export const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { user, loading } = useAuth();
   const { items, itemCount, subtotal, removeItem } = useCart();
+  const { itemCount: wishlistCount } = useWishlist();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -155,8 +157,13 @@ export const Header = () => {
             </div>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="hidden sm:block p-2 hover:bg-secondary rounded-full transition-colors">
+            <Link to="/wishlist" className="hidden sm:block relative p-2 hover:bg-secondary rounded-full transition-colors">
               <Heart size={20} />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-medium">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
             </Link>
 
             {/* User */}
